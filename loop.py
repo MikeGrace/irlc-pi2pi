@@ -12,57 +12,45 @@ mypath = 'contacts/'
 mode = 'main menu';
 
 def init():
-	# loop capturing input 1 character at a time.
-	# switch between input and command mode like vim using the escape character.
-
 	initialize_screen()
+	main_menu()
+
 	global mode
 
-	a = []
-	try:
-		tty.setraw(sys.stdin.fileno())
-		while True:
-			
-			ch = sys.stdin.read(1)
+	# a = []
+	# # escape
+	# if '\x1b' == ch:
+	# 	print 'output:'
+	# 	print ''.join(a)
+	# 	break
+	
+	# # backspace
+	# elif '\x7f' == ch:
+	# 	a.pop()
 
-			# escape
-			if '\x1b' == ch:
-				print 'output:'
-				print ''.join(a)
-				break
-			
-			# backspace
-			elif '\x7f' == ch:
-				a.pop()
+		
 
+def main_menu():
+	print '1: Message Contact'
+	print '2: Read Messages'
+	print '3: Update WIFI'
+	while True:
+		ch = sys.stdin.read(1)
+		terminal_helper(ch)
 
-			elif 'main menu' == mode:
-				if '1' == ch:
-					mode = 'contact menu'
-					contact_menu()
-				if '2' == ch:
-					mode = 'read messages'
-					read_messages()
+		if '1' == ch:
+			mode = 'contact menu'
+			contact_menu()
+			break
+		elif '2' == ch:
+			mode = 'read messages'
+			read_messages()
+			break
+		# escape
+		elif '\x1b' == ch:
+			print 'goodbye'
+			break
 
-
-			elif 'contact menu' == mode:
-				try:
-					if int(ch) <= contact_list_length:
-						select_contact(int(ch))
-				finally:
-					pass
-
-			# other characters
-			else:
-				# sys.stdout.write(ch)
-				sys.stdout.write(ch.encode('hex'))
-				sys.stdout.flush()
-				a.append(ch)
-
-
-	finally:
-		print 'attempting to return to normal'
-		termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
 def contact_menu():
@@ -74,6 +62,16 @@ def contact_menu():
 		print '%i: %s' % (i, c)
 	contact_list_length = i
 	
+	while True:
+		ch = sys.stdin.read(1)
+		terminal_helper(ch)
+		try:
+			if int(ch) <= contact_list_length:
+				select_contact(int(ch))
+				break;
+		finally:
+			pass
+	
 def select_contact(i):
 	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 	name = onlyfiles[i-1]
@@ -84,10 +82,6 @@ def read_messages():
 	print 'read messages now'
 
 def initialize_screen():
-	print '1: Message Contact'
-	print '2: Read Messages'
-	print '3: Update WIFI'
-
 	#lcd = CharLCD('PCF8574', 0x27)
 	global lcd
 	# lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
@@ -100,4 +94,20 @@ def update_screen(text):
 	# lcd.write_string(text)
 	noop()
 
-init()
+def terminal_helper(char):
+	#sys.stdout.write(ch.encode('hex'))
+	sys.stdout.write(char)
+	sys.stdout.flush()
+
+
+# LET'S GET THIS PARTY STARTED!!!
+try:
+	tty.setraw(sys.stdin.fileno())
+	init()
+finally:
+	print 'attempting to return to normal'
+	termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+
+
+
