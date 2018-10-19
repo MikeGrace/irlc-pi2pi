@@ -33,17 +33,21 @@ def init():
 def main_menu():
 	terminal_clear()
 	terminal_print('1: Message Contact')
+	terminal_print('2: Resume draft')
 	terminal_print('4: Read Messages')
 	#terminal_print('3: Update WIFI')
 	while True:
 		ch = sys.stdin.read(1)
 
 		if '1' == ch:
-			mode = 'contact menu'
 			contact_menu()
 			break
+
+		if '2' == ch:
+			resume_draft()
+			break
+
 		elif '4' == ch:
-			mode = 'read messages'
 			read_messages()
 			break
 
@@ -52,17 +56,25 @@ def main_menu():
 			terminal_print('goodbye')
 			break
 
-
-
-def contact_menu():
-	terminal_clear()
+def get_contact_list():
 	global contact_list_length
+	contacts = []
 	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 	i = 0
 	for c in onlyfiles:
 		i += 1
-		terminal_print('%i: %s' % (i, c))
+		contacts.append(c)
 	contact_list_length = i
+
+
+def contact_menu():
+	terminal_clear()
+	contacts = get_contact_list()
+	i = 0
+
+	for c in contacts:
+		i += 1
+		terminal_print('%i: %s' % (i, c))
 	
 	while True:
 		ch = sys.stdin.read(1)
@@ -93,7 +105,46 @@ def select_contact(i):
 
 
 def read_messages():
-	terminal_print('read messages now')
+	my_name = get_self()
+	contacts = get_contact_list()
+	messages_received = []
+
+	for contact in contacts:
+		terminal_clear()
+		terminal_print('Checking for messages from %s' % contact)
+		c = open(contact).read().splitlines()
+		host = c[0]
+		username = c[1]
+		key_path = c[2]
+		port = c[3]
+		terminal_print('Connecting to %s' % host)
+
+		try:
+			transport = paramiko.Transport((host, int(port)))
+			private_key = paramiko.RSAKey.from_private_key_file(key_path)
+			transport.connect(username = username, pkey=private_key)
+			sftp = paramiko.SFTPClient.from_transport(transport)
+			filepath = 'to-%s.txt' % my_name 
+			file = sftp.file(filepath, 'r')
+			msgs = file.read().splitlines()
+			file.close()
+			sftp.close()
+			transport.close()
+			if len(msgs) > 0:
+				messages_received.append(msgs)
+			terminal_clear()
+		except Exception as e:
+			terminal_clear()
+			terminal_print('Failed to connect to %s' % host)
+			sleep(2000)
+
+		finally:
+			while True:
+				ch = sys.stdin.read(1)
+				# escape
+				if '\x1b' == ch:
+					main_menu()
+					break
 
 def initialize_screen():
 	#lcd = CharLCD('PCF8574', 0x27)
@@ -119,7 +170,7 @@ def terminal_type(char):
 
 # working around tty manipulation issue
 def terminal_print(str):
-	print str + '\r'
+	print(str + '\r')
 
 
 def terminal_clear():
@@ -211,8 +262,27 @@ def send_message(to_name, message, connection_details):
 
 
 def save_draft(to_name, message):
-	
+	terminal_clear()
+	my_name = get_self()
+	try:
+		f = open('draft')
+		f.write(message)
+		f.close()		
+		terminal_print('Saved draft')
+	except Exception as e:
+		terminal_print('Failed to save draft')
+	finally:
+		while True:
+			ch = sys.stdin.read(1)
+			if '\x1b' == ch:
+				main_menu()
+				break
+		
 
+
+
+def get_self():
+	return = open('config').read()
 
 # LET'S GET THIS PARTY STARTED!!!
 try:
