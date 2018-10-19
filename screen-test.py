@@ -6,5 +6,6 @@ lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
               charmap='A02',
               auto_linebreaks=True,
               backlight_enabled=True)
-
-lcd.write_string('Hello IR(L)C')
+print 'time to test'
+lcd.write_string('Hello @ps-eng!\r\nHave an awesome day :)')
+print 'should be showing now'

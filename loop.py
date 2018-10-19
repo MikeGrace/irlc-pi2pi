@@ -6,16 +6,10 @@ from os.path import isfile, join
 
 fd = sys.stdin.fileno()
 old_settings = termios.tcgetattr(fd)
-mypath = 'contacts/'
-
-# modes: main menu, contact menu, message
-mode = 'main menu';
 
 def init():
 	initialize_screen()
 	main_menu()
-
-	global mode
 
 	# a = []
 	# # escape
@@ -58,20 +52,22 @@ def main_menu():
 
 def get_contact_list():
 	global contact_list_length
+	contacts_path = 'contacts/'
 	contacts = []
-	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+	onlyfiles = [f for f in listdir(contacts_path) if isfile(join(contacts_path, f))]
 	i = 0
 	for c in onlyfiles:
 		i += 1
 		contacts.append(c)
+		
 	contact_list_length = i
+	return contacts
 
 
 def contact_menu():
 	terminal_clear()
 	contacts = get_contact_list()
 	i = 0
-
 	for c in contacts:
 		i += 1
 		terminal_print('%i: %s' % (i, c))
@@ -88,9 +84,10 @@ def contact_menu():
 	
 def select_contact(i):
 	terminal_clear()
-	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+	contacts_path = 'contacts/'
+	onlyfiles = [f for f in listdir(contacts_path) if isfile(join(contacts_path, f))]
 	name = onlyfiles[i-1]
-	c = open(mypath + name, 'r').read().splitlines()
+	c = open(contacts_path + name, 'r').read().splitlines()
 	if test_connection(c[0], c[1], c[2], c[3]):
 		compose_message(name, c)
 	else:
@@ -282,7 +279,7 @@ def save_draft(to_name, message):
 
 
 def get_self():
-	return = open('config').read()
+	return open('config').read()
 
 # LET'S GET THIS PARTY STARTED!!!
 try:
@@ -295,3 +292,4 @@ finally:
 
 
 
+####
